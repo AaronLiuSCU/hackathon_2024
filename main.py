@@ -6,15 +6,29 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from mangum import Mangum
+from fastapi.middleware.cors import CORSMiddleware
 
+app = FastAPI()
+handler = Mangum(app)
+
+origins = [
+    "*"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class Item(BaseModel):
     count: int
     list_lat: list
     list_long: list
 
-app = FastAPI()
-handler = Mangum(app)
+
 
     
 @app.get("/")
