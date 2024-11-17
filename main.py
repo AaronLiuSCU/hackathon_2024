@@ -3,14 +3,18 @@ import json
 import src
 from dotenv import load_dotenv
 load_dotenv()
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-# from mangum import Mangum
+from mangum import Mangum
 
 
+class Item(BaseModel):
+    count: int
+    list_lat: list
+    list_long: list
 
 app = FastAPI()
-# handler = Mangum(app)
+handler = Mangum(app)
 
     
 @app.get("/")
@@ -25,10 +29,19 @@ async def return_nearby_charging_stations(lat: float, long: float, count: int = 
     return {"stations": nearby_stations}
     
 
-@app.get("/post_waypoints/")
-async def post_waypoints(waypoints, count: int = 5):
-    all_waypoints = waypoints
-    updated_waypoints, station_indexes, recharge_goal, price_list= src.get_all_stations_along_route(waypoints, count)
+@app.post("/post_waypoints/")
+async def post_waypoints(item: Item):
+    
+    all_waypoints_lat = item.list_lat
+    all_waypoints_long = item.list_long
+    all_waypoints = []
+    if (len(all_waypoints_lat) != len(all_waypoints_long)):
+        raise HTTPException(status_code=403, detail="Coordinate pairs missing items")
+    else:
+        for i in range(len(all_waypoints_lat)):
+            all_waypoints.append((all_waypoints_lat[i],all_waypoints_long[i]))
+    
+    updated_waypoints, station_indexes, recharge_goal, price_list= src.get_all_stations_along_route(all_waypoints, item.count)
     """
     updated_waypoints- array of sequential waypoints (where some waypoints are substituted for charging stations) to create a new route with
     station_indexes- the indexes of the stations in updated_waypoints 
@@ -37,3 +50,17 @@ async def post_waypoints(waypoints, count: int = 5):
     """
     return {"updated_waypoints": updated_waypoints, "station_indexes": station_indexes, "recharge_goal": recharge_goal, "price_list": price_list}
 
+
+# {
+#     "count": x 
+#     "list_lat": [
+#         lat1,
+#         lat2,
+#         ...
+#     ]
+#     "list_long": [
+#         long1,
+#         long2,
+#         ...
+#     ]
+# }
