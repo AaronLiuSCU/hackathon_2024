@@ -7,7 +7,6 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from mangum import Mangum
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List
 
 app = FastAPI()
 handler = Mangum(app)
@@ -26,8 +25,8 @@ app.add_middleware(
 
 class Item(BaseModel):
     count: int
-    list_lat: List[int]
-    list_long: List[int]
+    list_lat: list[float]
+    list_long: list[float]
 
 
 
